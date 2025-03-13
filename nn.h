@@ -19,7 +19,7 @@ public:
   Neuron(int in_weights);
   ~Neuron();
   // Define a functor to call the Neuron
-  Value* forward(Value** x);
+  Value* forward(Value** x, bool isOutputLayer);
   void printWeights() const;
   void update(double lr);
 };
@@ -31,7 +31,7 @@ private:
   int n_neurons;
 public:
   Layer(int n_neurons, int n_inputs);
-  Value** forward(Value** x);
+  Value** forward(Value** x, bool isOutputLayer);
   void update(double lr);
   void printLayer() const;
   int getNumNeurons() const;
@@ -59,7 +59,7 @@ public:
   nn(int* layer_sizes, int number_of_layers);
   Value** forward(Value** x);
   void update(double lr);
-  void train(Matrix& x, Matrix&, double& lr , int& epochs);
+  void train(Value** input, double lr , int epochs, int n_cols, int n_rows);
   void printNN() const;
 };
 

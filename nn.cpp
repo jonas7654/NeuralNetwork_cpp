@@ -28,17 +28,19 @@ Neuron::~Neuron() {
         delete bias;      // Delete bias
     }
 
-Value* Neuron::forward(Value** x) {
+Value* Neuron::forward(Value** x, bool isOutputLayer) {
  // int size_x = sizeof(x);
   // assert(size_x == n_weights);
   
   Value* res = new Value(0);
   for (int i = 0; i < n_weights; i++) {
-    res = *res + *x[i] * weights[i];
+    *res += *x[i] * weights[i];
   }
   *res += bias;
   // use sigmoid activation
-  res = res->sigmoid();
+  if (!isOutputLayer){
+    res = res->sigmoid();
+  }
   return res;
 }
 
@@ -68,11 +70,11 @@ Layer::Layer(int n_neurons, int n_input) {
   }
 }
 
-Value** Layer::forward(Value** x) {
+Value** Layer::forward(Value** x, bool isOutputLayer) {
   Value** output = new Value*[n_neurons];
 
   for (int i = 0; i < n_neurons; i++) {
-    output[i] = neurons[i]->forward(x);
+    output[i] = neurons[i]->forward(x, isOutputLayer);
   }
   return output;
 }
@@ -93,17 +95,21 @@ void Layer::printLayer() const { std::cout << "Number of Neurons: " << n_neurons
 nn::nn(int* layer_sizes, int number_of_layers) {
   this->input_size = layer_sizes[0];
   this->output_size = layer_sizes[number_of_layers - 1];
-  this->number_of_layers = this->input_size - 1; // Exclude the input as its not a "real" Layer
-  this->layers = new Layer*[number_of_layers];
+  this->number_of_layers = number_of_layers - 1; // Exclude the input as its not a "real" Layer
+  this->layers = new Layer*[this->number_of_layers];
   // Init first layers
   for (int i = 0; i < number_of_layers; i++) {
     this->layers[i] = new Layer(layer_sizes[i + 1], layer_sizes[i]);
   }
 }
 
-Value** nn::forward(Matrix& x) {
+Value** nn::forward(Value** x) {
+  bool isOutputLayer = false;
   for (int i = 0; i < number_of_layers; i++) {
-    x = layers[i]->forward(x);
+    if (i == number_of_layers - 1) {
+      isOutputLayer = true;
+    }
+    x = layers[i]->forward(x, isOutputLayer);
   }
   return x;
 }
@@ -114,27 +120,5 @@ void nn::update(double lr) {
   }
 }
 
-void nn::train(Matrix& x, Matrix& y, double& lr , int& epochs) {
-  Value** output;
-
-  for (int e = 0; e < epochs; e++) {
-    
-    Value* c = new Value(0.0);
-
-    for (int i = 0; i < x.num_rows(); i++) {
-      Value** input = x.at(i,)
-
-      output = this->forward(input);
-      for (int k = 0; k < output_size; k++) {
-        *c += cost(output[k], MAT_AT(train_data, n_cols, i, n_cols - 1));
-      }      
-    }
-    std::cout << "Cost: " << c->getData() << std::endl;
-    c->backward();
-    this->update(lr);
-    c->zeroGrad();
-    c->deleteGraph(); // This only deletes non parameter nodes
-  }
-}
 
 

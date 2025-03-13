@@ -22,21 +22,45 @@ int main() {
    new Value(1),new Value(0),new Value(1),
    new Value(1),new Value(1),new Value(0),
 };
+
+  Value* train_data2[10] = {
+    new Value(1), new Value(2),
+    new Value(2), new Value(4),
+    new Value(3), new Value(6),
+    new Value(4), new Value(7),
+    new Value(5), new Value(10)
+  };
   // TEST LAYER 
-  int epochs = 1000*100;
-  constexpr int n_cols = 3;
-  constexpr int n_rows = 4;
-  int layer_sizes[3] = {2, 3, 1};
-  constexpr int num_layers = sizeof(layer_sizes) / sizeof(layer_sizes[0]);
+  int epochs = 5000;
+  int n_cols = 2;
+  int n_rows = 5;
+  int layer_sizes[4] = {1, 4, 400, 1};
+  int num_layers = sizeof(layer_sizes) / sizeof(layer_sizes[0]);
 
   nn nn(layer_sizes, num_layers);
-  nn.train(train_data, 0.1, epochs, n_cols, n_rows);
+  
+  for (int e = 0; e < epochs; e++) {
+    Value* c = new Value(0.0);
+    for (int i = 0; i < n_rows; i++) {
+        Value* y_true = MAT_AT(train_data2, n_cols, i, 1);
+        Value* input[1] = {MAT_AT(train_data2, n_cols, i, 0)};
 
-  ///// forward
-  Value* input[2] = {MAT_AT(train_data, n_cols, 0, 0), MAT_AT(train_data, n_cols, 0, 1)}; // x1 = 0, x2 = 0
-  Value** output = nn.forward(input);
-  for (int i = 0; i < 1; i++) {
-    output[i]->printValue();
+        Value** output = nn.forward(input);
+        *c += cost(y_true, output[0]);
+    }
+    std::cout << "Cost " << c->getData() << std::endl;
+    c->backward();
+    nn.update(0.05);
+    c->zeroGrad();
+    c->deleteGraph();
+  }
+
+  // Check prediction out of sample
+  Value* test_data[5] = {new Value(10), new Value(50), new Value(5), new Value(1), new Value(2)};
+  for (int i = 0; i < 5; i++) {
+      Value* input[1] = {test_data[i]};
+      Value** output = nn.forward(input);
+      std::cout << input[0]->getData() << "| " << output[0]->getData() << std::endl;
   }
 
   return 0;

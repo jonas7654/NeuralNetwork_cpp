@@ -28,11 +28,6 @@ Value::Value() {
 
 Value::~Value() {}
 
-Value* Value::operator = (Value* other) {
-  this->data = other;
-  return this;
-}
-
 // :TODO: Is is ok to specifically code this for the use of the Matrix class?
 void Value::operator = (double& other) {
   this->data = other; 
